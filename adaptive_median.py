@@ -46,22 +46,47 @@ Date        Name         Description
 
 ##--------------------------------------
 import sys
+from numarray import *
 ## from time import time, gmtime, strftime, strptime, mktime, sleep
 
 def filter(image, size, window, threshold, verbose):
 
-    ## set image dimensions
+    ## set filter window and image dimensions
     W = 2*window + 1
     xlength, ylength = size
     if verbose:
         print "Image length in X direction: ", xlength
 	print "Image length in Y direction: ", ylength
 
-    ## loop over y and x
-    
-    ## check for threshold
+    ## create 2-D image array and initialize window
+    image_array = reshape(array(image, type=UInt8), (ylength,xlength))
+    filter_window = zeros((W,W))
+    scale = zeros(W*W)
+    ## loop over image with specified window W
+    try:
+        for y in range(window, ylength-(window+1)):
+            for x in range(window, xlength-(window+1)):
+	    ## populate window, sort, find median
+                filter_window = image_array[y-window:y+window+1,x-window:x+window+1]
+        	sorted = sort(reshape(filter_window, ((W*W),)))
+        	median = sorted[len(sorted)/2]
+		## check for threshold
+		if not threshold > 0:
+		    image_array[y,x] = median
+		else:
+	    	    for n in range(len(sorted)):
+			scale[n] = abs(sorted[n] - median)
+	    	    scale = sort(scale)
+	    	    Sk = 1.4826 * (scale[len(scale)/2])
+		    if abs(image_array[y,x] - median) > (threshold * Sk):
+		        image_array[y,x] = median
 
-    return image
+    except Error, err:
+        sys.stderr.write(err)
+	sys.exit(2)
+
+    ## convert array back to sequence and return
+    return reshape(image_array, (xlength*ylength,)).tolist()
 
 def main(argv):
 
@@ -76,7 +101,7 @@ def main(argv):
         (True, False) = (1, 0)
 
     try:
-        args, filenames = getopt.getopt(argv[1:], "hv", ["help", "verbose", "window=", "threshold="])
+        args, filenames = getopt.getopt(argv[1:], "hvwt", ["help", "verbose", "window=", "threshold="])
     except getopt.error, msg:
         args = "dummy"
         print msg
@@ -88,7 +113,7 @@ def main(argv):
     # window = ws, where the filter window W = 2*ws + 1, 
     # ie, ws = 1 is a 3x3 window (W=3)
     window = 1
-    threshold = 0.0
+    threshold = 0.
 
     for o, a in args:
         if o in ("-h", "--help"):
@@ -100,28 +125,45 @@ def main(argv):
         print "options =", args
         print "filenames =", filenames
 
-    for o in args[:]:
-        if o[0] == '--window' and o[1] != '':
-            window = int(o[1])
-            args.remove(o)
-            break
-        elif o[0] == '--window' and o[1] == '':
-            print "The --window option requires an argument."
-            sys.exit(2)
-        if o[0] == '--threshold' and o[1] != '':
-            threshold = float(o[1])
-            args.remove(o)
-            break
-        elif o[0] == '--threshold' and o[1] == '':
-            print "The --threshold option requires an argument."
-            sys.exit(2)
+    try:
+        for o in args[:]:
+            if o[0] == '--threshold' and o[1] != '':
+                threshold = float(o[1])
+                args.remove(o)
+                break
+            elif o[0] == '--threshold' and o[1] == '':
+                print "The --threshold option requires an argument."
+                sys.exit(2)
+        for o in args[:]:
+            if o[0] == '--window' and o[1] != '':
+                window = int(o[1])
+                args.remove(o)
+                break
+            elif o[0] == '--window' and o[1] == '':
+                print "The --window option requires an argument."
+                sys.exit(2)
+    except ValueError:
+        print "Incompatible parameter: ", o[1], " Value must be a number."
+        sys.stderr.write
+        sys.exit(2)
+    except TypeError, err:
+        sys.stderr.write(err)
+        sys.exit(2)
+
+    if threshold < 0.:
+        print "The threshold must be a non-negative real value (default=0)."
+	sys.exit(2)
 
     if not (1 <= window <= 5):
-        print "The window size must be an integer between 1 and 5."
+        print "The window size must be an integer between 1 and 5 (default=1)."
 	sys.exit(2)
     
     if not filenames:
         print "Please specify one or more gray-scale input files."
+
+    if verbose:
+        print "window =", window
+        print "threshold =", threshold
 
     image_count = 0
 
@@ -166,7 +208,7 @@ def main(argv):
 	            print "Output image name: ", outfile
 
 	    except IOError, err:
-	        sys.stderr.write()
+	        sys.stderr.write(err)
 		if verbose:
 		    print "Cannot create output image for ", input_image, "."
 		    print "  Continuing with next available file..."
@@ -175,7 +217,7 @@ def main(argv):
 	    ## output_image.show()
 
         except MemoryError, err:
-	    sys.stderr.write()
+	    sys.stderr.write(err)
 	    if verbose:
                 print "Not enough memory to create output image for ", input_image, "."
 		print "  Continuing with next available file..."
