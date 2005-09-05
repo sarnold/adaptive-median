@@ -17,8 +17,8 @@ Desc:   This routine is run from the command line with one or more arguments
         higher values of 't' will reduce the probability of pixel replacement.
         This effectively filters out the more outlying pixels.
 
-	Requires Python Imaging Library (PIL) of recent vintage.
-       
+	Requires Python Imaging Library (PIL) of recent vintage, and numarray.
+
 Arguments:
 
 Name            I/O     Description
@@ -41,7 +41,7 @@ adaptive_median.py [-hv|--help --verbose --window=[1..5] --threshold=[N]] <filen
 Revision History:
 Date        Name         Description
 ----        ----         -----------
-08-28-2005  S.L. Arnold  Initial implementation with internal sort.
+08-28-2005  S.L. Arnold  Initial implementation with internal (numarray) sort.
 """
 
 ##--------------------------------------
@@ -62,6 +62,7 @@ def filter(image, size, window, threshold, verbose):
     image_array = reshape(array(image, type=UInt8), (ylength,xlength))
     filter_window = zeros((W,W))
     scale = zeros(W*W)
+    pixel_count = 0
     ## loop over image with specified window W
     try:
         for y in range(window, ylength-(window+1)):
@@ -80,11 +81,13 @@ def filter(image, size, window, threshold, verbose):
 	    	    Sk = 1.4826 * (scale[len(scale)/2])
 		    if abs(image_array[y,x] - median) > (threshold * Sk):
 		        image_array[y,x] = median
+			pixel_count += 1
 
     except Error, err:
         sys.stderr.write(err)
 	sys.exit(2)
 
+    print pixel_count, "pixel(s) filtered out of", xlength*ylength
     ## convert array back to sequence and return
     return reshape(image_array, (xlength*ylength,)).tolist()
 
@@ -224,7 +227,7 @@ def main(argv):
             continue
 
         infile.close()
-	image_count = image_count + 1
+	image_count =+ 1
 
     print image_count, " image(s) filtered."
 
