@@ -4,9 +4,7 @@
 Routine Name:  adaptive_median.py
 
 Desc:   This routine is run from the command line with one or more arguments
-	and an input image filename; it may support more than one image file
-	in the future, but currently only supports one image filename as the
-	last (and only required) argument.  The optional arguments include
+	and one or more input image filenames.  Optional arguments include
 	Help, Verbose, and the filter parameters Window and Threshold.
 
         Window is specified as the window size (ws) where the width of the 
@@ -23,8 +21,6 @@ Arguments:
 
 Name            I/O     Description
 ----            ---     -----------
-filename(s)     In      One or more gray-scale image files
-
 -h|--help       N/A     Prints module docstring
 -v|--verbose    N/A     Prints extra more verbose messages
 -w|--window     N/A     Sets the filter window size (must be a scalar
@@ -34,9 +30,11 @@ filename(s)     In      One or more gray-scale image files
                         behavior).  Higher values reduce the "aggresiveness"
 			of the filter.
 
+filename(s)     In      One or more gray-scale image files
+
 usage:
 
-adaptive_median.py [-hv|--help --verbose --window=[1..5] --threshold=[N]] <filename> [<filename>...]
+adaptive_median.py [-hvwt|--help --verbose --window=[1..5] --threshold=[N]] <filename> [<filename>...]
 
 Revision History:
 Date        Name         Description
