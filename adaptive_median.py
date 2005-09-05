@@ -225,7 +225,7 @@ def main(argv):
             continue
 
         infile.close()
-	image_count =+ 1
+	image_count += 1
 
     print image_count, " image(s) filtered."
 
