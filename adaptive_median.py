@@ -82,7 +82,7 @@ def process(image, size, window, threshold, spam):
 		else:
 	    	    scale = zeros(vlength)
 	    	    for n in range(vlength):
-			scale[n] = abs(sorted[n] - median)
+			scale[n] = abs(target_vector[n] - median)
 	    	    scale = sort(scale)
 	    	    Sk = 1.4826 * (scale[vlength/2])
 		    if abs(image_array[y,x] - median) > (threshold * Sk):
@@ -160,11 +160,11 @@ def main(argv):
                 print "The --window option requires an argument."
                 sys.exit(2)
     except ValueError:
-        print "Incompatible parameter: ", o[1], " Value must be a number."
+        print "Incompatible parameter", o[1],".", " Option must be a number."
         sys.stderr.write
         sys.exit(2)
     except TypeError, err:
-        sys.stderr.write(err)
+        print "Parameter error:", err
         sys.exit(2)
 
     if threshold < 0.:
@@ -189,7 +189,7 @@ def main(argv):
         try:
             infile = open(filename, "rb")
         except IOError, err:
-            sys.stderr.write(err)
+            print "Input file error:", err
             if spam:
                 print "Please check the name(s) of your input file(s)."
             os.close(sys.stderr.fileno())
@@ -229,7 +229,7 @@ def main(argv):
 	            print "Output image name: ", outfile
 
 	    except IOError, err:
-	        sys.stderr.write(err)
+	        print "Output file error:", err
 		if spam:
 		    print "Cannot create output image for ", input_image, "."
 		    print "  Continuing with next available file..."
