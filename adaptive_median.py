@@ -40,6 +40,8 @@ Revision History:
 Date        Name         Description
 ----        ----         -----------
 08-28-2005  S.L. Arnold  Initial implementation with internal (numarray) sort.
+09-18-2005  S.L. Arnold  Added timing routine and prepped for calling SWIG-
+                         wrapped functions.
 """
 
 ##--------------------------------------
@@ -96,6 +98,7 @@ def process(image, size, window, threshold, spam):
     return reshape(image_array, (xlength*ylength,)).tolist()
 
 def demo(target_array, array_length):
+
     sorted = sort(target_array)
     median = sorted[array_length/2]
     return median
