@@ -44,39 +44,45 @@ Date        Name         Description
 
 ##--------------------------------------
 import sys
+##import medians_1D
 from numarray import *
-## from time import time, gmtime, strftime, strptime, mktime, sleep
 
-def filter(image, size, window, threshold, verbose):
+def process(image, size, window, threshold, spam):
 
     ## set filter window and image dimensions
     W = 2*window + 1
     xlength, ylength = size
-    if verbose:
-        print "Image length in X direction: ", xlength
-	print "Image length in Y direction: ", ylength
+    vlength = W*W
+    if spam:
+        print "Image length in X direction:", xlength
+	print "Image length in Y direction:", ylength
+	print "Filter window size:", W, "x", W
 
     ## create 2-D image array and initialize window
     image_array = reshape(array(image, type=UInt8), (ylength,xlength))
     filter_window = zeros((W,W))
-    scale = zeros(W*W)
     pixel_count = 0
-    ## loop over image with specified window W
+
     try:
+        ## loop over image with specified window W
         for y in range(window, ylength-(window+1)):
             for x in range(window, xlength-(window+1)):
 	    ## populate window, sort, find median
                 filter_window = image_array[y-window:y+window+1,x-window:x+window+1]
-        	sorted = sort(reshape(filter_window, ((W*W),)))
-        	median = sorted[len(sorted)/2]
+                target_vector = reshape(filter_window, ((vlength),))
+        	## internal sort
+        	median = demo(target_vector, vlength)
+        	##median = quick_select(target_vector, vlength)
 		## check for threshold
 		if not threshold > 0:
 		    image_array[y,x] = median
+		    pixel_count += 1
 		else:
-	    	    for n in range(len(sorted)):
+	    	    scale = zeros(vlength)
+	    	    for n in range(vlength):
 			scale[n] = abs(sorted[n] - median)
 	    	    scale = sort(scale)
-	    	    Sk = 1.4826 * (scale[len(scale)/2])
+	    	    Sk = 1.4826 * (scale[vlength/2])
 		    if abs(image_array[y,x] - median) > (threshold * Sk):
 		        image_array[y,x] = median
 			pixel_count += 1
@@ -89,9 +95,15 @@ def filter(image, size, window, threshold, verbose):
     ## convert array back to sequence and return
     return reshape(image_array, (xlength*ylength,)).tolist()
 
+def demo(target_array, array_length):
+    sorted = sort(target_array)
+    median = sorted[array_length/2]
+    return median
+
 def main(argv):
 
     import os, getopt, sys, Image
+    import timing
 
     global filename
 
@@ -110,7 +122,8 @@ def main(argv):
         print "Demonstrates adaptive median filtering on gray-scale images."
         sys.exit(2)
 
-    verbose = False
+    # Obligatory spam variable; controls verbosity of the output
+    spam = False
     # window = ws, where the filter window W = 2*ws + 1, 
     # ie, ws = 1 is a 3x3 window (W=3)
     window = 1
@@ -121,8 +134,8 @@ def main(argv):
             print __doc__
             sys.exit(0)
         if o in ("-v", "--verbose"):
-            verbose = True
-    if verbose:
+            spam = True
+    if spam:
         print "options =", args
         print "filenames =", filenames
 
@@ -162,18 +175,19 @@ def main(argv):
     if not filenames:
         print "Please specify one or more gray-scale input files."
 
-    if verbose:
+    if spam:
         print "window =", window
         print "threshold =", threshold
 
     image_count = 0
+    filter_time = 0.
 
     for filename in filenames:
         try:
             infile = open(filename, "rb")
         except IOError, err:
             sys.stderr.write(err)
-            if verbose:
+            if spam:
                 print "Please check the name(s) of your input file(s)."
             os.close(sys.stderr.fileno())
             sys.exit(2)
@@ -181,23 +195,26 @@ def main(argv):
 	try:
 	    pil_image = Image.open(infile)
 	    if pil_image.mode == 'P':
-	        if verbose:
+	        if spam:
 	            print "Original image mode: ",pil_image.mode
 	        pil_image = pil_image.convert("L")
 	except IOError:
 	    print "Cannot parse input image format.", pil_image
-	if verbose:
+	if spam:
 	    print "Input image format: ", pil_image.format
 	    print "Input image size: ", pil_image.size
 	    print "Working image mode: ",pil_image.mode
-	    ## print "Displaying input image...", pil_image
-	    ## pil_image.show()
-	size = pil_image.size
-	## Convert the PIL image object
+
+	## Convert the PIL image object to a sequence (list)
 	input_sequence = list(pil_image.getdata())
+
 	try:
+	    timing.start()
 	    ## filter input image sequence
-	    output_sequence = filter(input_sequence, size, window, threshold, verbose)
+	    output_sequence = process(input_sequence, pil_image.size, window, threshold, spam)
+	    timing.finish()
+	    filter_time = filter_time + float(timing.micro()) / 1000000
+
 	    ## init output image
 	    file, ext = os.path.splitext(filename)
 	    outfile = "new_" + file + ext
@@ -205,21 +222,19 @@ def main(argv):
 	        output_image = Image.new(pil_image.mode, pil_image.size, None)
 	        output_image.putdata(output_sequence)
 	        output_image.save(outfile, pil_image.format)
-	        if verbose:
+	        if spam:
 	            print "Output image name: ", outfile
 
 	    except IOError, err:
 	        sys.stderr.write(err)
-		if verbose:
+		if spam:
 		    print "Cannot create output image for ", input_image, "."
 		    print "  Continuing with next available file..."
 		continue
-	    
-	    ## output_image.show()
 
         except MemoryError, err:
 	    sys.stderr.write(err)
-	    if verbose:
+	    if spam:
                 print "Not enough memory to create output image for ", input_image, "."
 		print "  Continuing with next available file..."
             continue
@@ -227,7 +242,7 @@ def main(argv):
         infile.close()
 	image_count += 1
 
-    print image_count, " image(s) filtered."
+    print image_count, "image(s) filtered in", filter_time, "seconds."
 
 if __name__ == "__main__":
     main(sys.argv)
