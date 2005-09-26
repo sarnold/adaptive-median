@@ -46,7 +46,7 @@ Date        Name         Description
 
 ##--------------------------------------
 import sys
-##import medians_1D
+import medians_1D
 from numarray import *
 
 def process(image, size, window, threshold, spam):
@@ -74,7 +74,7 @@ def process(image, size, window, threshold, spam):
                 target_vector = reshape(filter_window, ((vlength),))
         	## internal sort
         	median = demo(target_vector, vlength)
-        	##median = quick_select(target_vector, vlength)
+        	##median = medians_1D.quick_select(target_vector, vlength)
 		## check for threshold
 		if not threshold > 0:
 		    image_array[y,x] = median
@@ -89,9 +89,10 @@ def process(image, size, window, threshold, spam):
 		        image_array[y,x] = median
 			pixel_count += 1
 
-    except Error, err:
-        sys.stderr.write(err)
+    except (TypeError), err:
+        print "Error in processing function:", err
 	sys.exit(2)
+	## ,NameError,ArithmeticError,LookupError
 
     print pixel_count, "pixel(s) filtered out of", xlength*ylength
     ## convert array back to sequence and return
@@ -127,6 +128,7 @@ def main(argv):
 
     # Obligatory spam variable; controls verbosity of the output
     spam = False
+    
     # window = ws, where the filter window W = 2*ws + 1, 
     # ie, ws = 1 is a 3x3 window (W=3)
     window = 1
