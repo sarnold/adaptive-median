@@ -65,7 +65,7 @@ def process(image, size, window, threshold, spam):
         print 'Filter window size: ', W, 'x', W
 
     ## create 2-D image array and initialize window
-    image_array = reshape(array(image, dtype=int8), (ylength,xlength))
+    image_array = reshape(array(image, dtype=int16), (ylength,xlength))
     filter_window = array(zeros((W,W)))
     target_vector = array(zeros(vlength))
     pixel_count = 0
@@ -104,8 +104,8 @@ def process(image, size, window, threshold, spam):
     return reshape(image_array, (xlength*ylength,)).tolist()
 
 def demo(target_array, array_length):
-    sorted = sort(target_array)
-    median = sorted[array_length/2]
+    sorted_array = sort(target_array)
+    median = sorted_array[array_length/2]
     return median
 
 class Timer(object):
@@ -230,40 +230,40 @@ def main(argv):
 	    print "Input image size: ", pil_image.size
 	    print "Working image mode: ",pil_image.mode
 
-	## Convert the PIL image object to a sequence (list)
+	## Convert the PIL image object to a python sequence (list)
 	input_sequence = list(pil_image.getdata())
 
 	try:
-	    ## filter input image sequence
+            ## filter input image sequence
             with Timer() as t:
                 output_sequence = process(input_sequence, pil_image.size, window, threshold, spam)
 
-	    ## init output image
-	    file, ext = os.path.splitext(filename)
-	    outfile = "new_" + file + ext
-	    try:
-	        output_image = Image.new(pil_image.mode, pil_image.size, None)
-	        output_image.putdata(output_sequence)
-	        output_image.save(outfile, pil_image.format)
-	        if spam:
-	            print "Output image name: ", outfile
+            ## init output image
+            file, ext = os.path.splitext(filename)
+            outfile = "new_" + file + ext
+            try:
+                output_image = Image.new(pil_image.mode, pil_image.size, None)
+                output_image.putdata(output_sequence)
+                output_image.save(outfile, pil_image.format)
+                if spam:
+                    print "Output image name: ", outfile
 
-	    except IOError, err:
-	        print "Output file error:", err
-		if spam:
-		    print "Cannot create output image for ", input_image, "."
-		    print "  Continuing with next available file..."
-		continue
+            except IOError, err:
+                print "Output file error:", err
+                if spam:
+                    print "Cannot create output image for ", input_image, "."
+                    print "  Continuing with next available file..."
+                continue
 
         except MemoryError, err:
-	    sys.stderr.write(err)
-	    if spam:
+            sys.stderr.write(err)
+            if spam:
                 print "Not enough memory to create output image for ", input_image, "."
-		print "  Continuing with next available file..."
+                print "  Continuing with next available file..."
             continue
 
         infile.close()
-	image_count += 1
+        image_count += 1
 
     print image_count, " images filtered in %s sec." % t.secs
 
