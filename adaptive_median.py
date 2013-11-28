@@ -43,6 +43,7 @@ Date        Name         Description
 08-28-2005  S.L. Arnold  Initial implementation with internal (numarray) sort.
 09-18-2005  S.L. Arnold  Added timing routine and prepped for calling SWIG-
                          wrapped functions.
+11-28-2013  S.L. Arnold  Updated to work with Python 2.7, pillow, and numpy.
 """
 
 ##--------------------------------------
