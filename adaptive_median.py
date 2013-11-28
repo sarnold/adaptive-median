@@ -159,7 +159,6 @@ def main(argv):
             sys.exit(0)
         if o in ("-v", "--verbose"):
             spam = True
-            verbose = True
 
     if spam:
         print "options =", args
@@ -236,7 +235,7 @@ def main(argv):
 
 	try:
             ## filter input image sequence
-            with Timer() as t:
+            with Timer(spam) as t:
                 output_sequence = process(input_sequence, pil_image.size, window, threshold, spam)
 
             ## init output image
