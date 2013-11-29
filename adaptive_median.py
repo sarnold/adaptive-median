@@ -66,7 +66,7 @@ def process(image, size, window, threshold, spam):
         print 'Filter window size: ', W, 'x', W
 
     ## create 2-D image array and initialize window
-    image_array = reshape(array(image, dtype=int16), (ylength,xlength))
+    image_array = reshape(array(image, dtype=uint8), (ylength,xlength))
     filter_window = array(zeros((W,W)))
     target_vector = array(zeros(vlength))
     pixel_count = 0
