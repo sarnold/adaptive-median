@@ -88,10 +88,10 @@ def process(image, size, window, threshold, spam):
                 else:
                     scale = zeros(vlength)
                     for n in range(vlength):
-                        scale[n] = abs(target_vector[n] - median)
+                        scale[n] = abs(int(target_vector[n]) - int(median))
                     scale = sort(scale)
                     Sk = 1.4826 * (scale[vlength/2])
-                    if abs(image_array[y,x] - median) > (threshold * Sk):
+                    if abs(int(image_array[y,x]) - int(median)) > (threshold * Sk):
                         image_array[y,x] = median
                         pixel_count += 1
 
